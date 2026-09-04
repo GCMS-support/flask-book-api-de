@@ -1,6 +1,14 @@
+import logging
+
 from flask import Flask, abort, jsonify, request
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+)
 
 app = Flask(__name__)
 limiter = Limiter(app=app, key_func=get_remote_address, storage_uri="memory://")
@@ -42,6 +50,7 @@ def rate_limit_error(_error):
 @app.route('/api/books', methods=['GET', 'POST'])
 @limiter.limit("10/minute")
 def handle_books():
+    app.logger.info("%s request received for /api/books", request.method)
     if request.method == 'POST':
         new_book = request.get_json(silent=True)
         if not validate_book_data(new_book):
@@ -73,6 +82,7 @@ def handle_books():
 
 @app.route('/api/books/<int:id>', methods=['PUT'])
 def handle_book(id):
+    app.logger.info("PUT request received for /api/books/%s", id)
     book = find_book_by_id(id)
     if book is None:
         abort(404)
@@ -84,6 +94,7 @@ def handle_book(id):
 
 @app.route('/api/books/<int:id>', methods=['DELETE'])
 def delete_book(id):
+    app.logger.info("DELETE request received for /api/books/%s", id)
     book = find_book_by_id(id)
     if book is None:
         abort(404)
