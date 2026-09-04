@@ -1,6 +1,9 @@
 from flask import Flask, abort, jsonify, request
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 app = Flask(__name__)
+limiter = Limiter(app=app, key_func=get_remote_address, storage_uri="memory://")
 
 books = [
     {"id": 1, "title": "The Great Gatsby", "author": "F. Scott Fitzgerald"},
@@ -31,7 +34,13 @@ def method_not_allowed_error(_error):
     return jsonify({"error": "Method Not Allowed"}), 405
 
 
+@app.errorhandler(429)
+def rate_limit_error(_error):
+    return jsonify({"error": "Rate limit exceeded"}), 429
+
+
 @app.route('/api/books', methods=['GET', 'POST'])
+@limiter.limit("10/minute")
 def handle_books():
     if request.method == 'POST':
         new_book = request.get_json(silent=True)
