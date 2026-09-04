@@ -5,6 +5,9 @@ app = Flask(__name__)
 books = [
     {"id": 1, "title": "The Great Gatsby", "author": "F. Scott Fitzgerald"},
     {"id": 2, "title": "1984", "author": "George Orwell"},
+] + [
+    {"id": book_id, "title": f"Test Book {book_id}", "author": f"Author {book_id}"}
+    for book_id in range(3, 103)
 ]
 
 
@@ -41,11 +44,22 @@ def handle_books():
         return jsonify(new_book), 201
 
     author = request.args.get('author')
+    filtered_books = books
     if author:
         filtered_books = [book for book in books if book.get('author') == author]
-        return jsonify(filtered_books)
 
-    return jsonify(books)
+    try:
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))
+    except ValueError:
+        return jsonify({"error": "page and limit must be integers"}), 400
+
+    if page < 1 or limit < 1:
+        return jsonify({"error": "page and limit must be positive"}), 400
+
+    start_index = (page - 1) * limit
+    end_index = start_index + limit
+    return jsonify(filtered_books[start_index:end_index])
 
 
 @app.route('/api/books/<int:id>', methods=['PUT'])
