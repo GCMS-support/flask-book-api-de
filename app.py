@@ -8,6 +8,11 @@ books = [
 ]
 
 
+def find_book_by_id(book_id):
+    """Return the book with book_id, or None if it does not exist."""
+    return next((book for book in books if book['id'] == book_id), None)
+
+
 @app.route('/api/books', methods=['GET', 'POST'])
 def handle_books():
     if request.method == 'POST':
@@ -18,6 +23,17 @@ def handle_books():
         return jsonify(new_book), 201
 
     return jsonify(books)
+
+
+@app.route('/api/books/<int:id>', methods=['PUT'])
+def handle_book(id):
+    book = find_book_by_id(id)
+    if book is None:
+        return '', 404
+
+    new_data = request.get_json()
+    book.update(new_data)
+    return jsonify(book)
 
 
 if __name__ == "__main__":
