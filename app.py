@@ -29,7 +29,13 @@ def find_book_by_id(book_id):
 
 def validate_book_data(data):
     """Return whether data contains the fields required for a book."""
-    return isinstance(data, dict) and "title" in data and "author" in data
+    return (
+        isinstance(data, dict)
+        and isinstance(data.get("title"), str)
+        and bool(data["title"].strip())
+        and isinstance(data.get("author"), str)
+        and bool(data["author"].strip())
+    )
 
 
 @app.errorhandler(404)
@@ -87,8 +93,11 @@ def handle_book(id):
     if book is None:
         abort(404)
 
-    new_data = request.get_json()
-    book.update(new_data)
+    new_data = request.get_json(silent=True)
+    if not validate_book_data(new_data):
+        return jsonify({"error": "Invalid book data"}), 400
+
+    book.update({"title": new_data["title"], "author": new_data["author"]})
     return jsonify(book)
 
 
