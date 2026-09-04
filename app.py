@@ -40,6 +40,11 @@ def handle_books():
         books.append(new_book)
         return jsonify(new_book), 201
 
+    author = request.args.get('author')
+    if author:
+        filtered_books = [book for book in books if book.get('author') == author]
+        return jsonify(filtered_books)
+
     return jsonify(books)
 
 
