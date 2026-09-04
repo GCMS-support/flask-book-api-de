@@ -2,18 +2,22 @@ from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
+books = [
+    {"id": 1, "title": "The Great Gatsby", "author": "F. Scott Fitzgerald"},
+    {"id": 2, "title": "1984", "author": "George Orwell"},
+]
+
 
 @app.route('/api/books', methods=['GET', 'POST'])
-def books():
-    if request.method == 'GET':
-        books_list = [
-            {"id": 1, "title": "The Great Gatsby", "author": "F. Scott Fitzgerald"},
-            {"id": 2, "title": "1984", "author": "George Orwell"},
-        ]
-        return jsonify(books_list)
+def handle_books():
+    if request.method == 'POST':
+        new_book = request.get_json()
+        new_id = max(book['id'] for book in books) + 1
+        new_book['id'] = new_id
+        books.append(new_book)
+        return jsonify(new_book), 201
 
-    new_book = request.get_json()
-    return jsonify(new_book), 201
+    return jsonify(books)
 
 
 if __name__ == "__main__":
